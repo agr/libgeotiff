@@ -65,7 +65,9 @@ jobs:
           cd build
           cmake -G "Visual Studio 16 2019" -A ${{ env.ARCH }} .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release  -DCMAKE_C_FLAGS="/WX" -DCMAKE_CXX_FLAGS="/WX"  -DCMAKE_INSTALL_PREFIX="$buildRoot/install" -DPROJ_INCLUDE_DIR="$buildRoot/install-proj/include" -DPROJ_LIBRARY="$buildRoot/install-proj/lib/proj.lib" -DCMAKE_TOOLCHAIN_FILE="$vcpkgPath/scripts/buildsystems/vcpkg.cmake"
           cmake --build . --config Release --target install
-          # Pulling dependencies that are not placed in the install directory
+
+      - name: Add runtime dependencies
+        run: |
           copy $buildRoot\install-proj\bin\*.dll $buildRoot\install\bin\
           copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\sqlite3.dll $buildRoot\install\bin\
           copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\tiff.dll $buildRoot\install\bin\
