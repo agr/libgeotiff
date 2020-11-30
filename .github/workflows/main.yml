@@ -41,9 +41,11 @@ jobs:
           mkdir build
           cd build
           copy ..\..\sqlite3.exe .
-          copy c:\projects\libgeotiff\vcpkg\installed\%platform%-windows\bin\sqlite3.dll .
-          set PATH=%CD%;%PATH%
-          cmake -G "%VS_FULL%" .. -DCMAKE_BUILD_TYPE=Release -DPROJ_TESTS=OFF -DBUILD_LIBPROJ_SHARED=ON -DCMAKE_TOOLCHAIN_FILE=c:/projects/libgeotiff/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX="%BUILD_FOLDER%/install"
+          $vcpkgPath = [System.IO.Path]::GetDirectoryName((Get-Command vcpkg).Source)
+          Write-Host $vcpkgPath
+          copy $vcpkgPath\installed\x64-windows\bin\sqlite3.dll .
+          $env:PATH="$($pwd.Path);$($env:PATH)"
+          cmake -G "Visual Studio 16 Win64" .. -DCMAKE_BUILD_TYPE=Release -DPROJ_TESTS=OFF -DBUILD_LIBPROJ_SHARED=ON -DCMAKE_TOOLCHAIN_FILE=$vcpkgPath/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX="./install"
           cmake --build . --config Release --target install
           cd ..
           cd ..
