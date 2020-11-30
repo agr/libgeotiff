@@ -1,31 +1,21 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: Windows CI
 
-# Controls when the action will run. 
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: windows-2019
-
     env:
         ARCH: x64
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
       - name: Cache vcpkg packages
@@ -35,7 +25,6 @@ jobs:
             path: c:\vcpkg\installed
             key: ${{ runner.os }}-vcpkg-${{ hashFiles('.github/workflows/main.yml') }}
 
-      # Runs a single command using the runners shell
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -61,7 +50,6 @@ jobs:
           cd ..
           cd ..
           
-      # Runs a set of commands using the runners shell
       - name: Build
         run: |
           $buildRoot=$pwd.Path.Replace("\", "/")
@@ -71,3 +59,15 @@ jobs:
           cd build
           cmake -G "Visual Studio 16 2019" -A ${{ env.ARCH }} .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release  -DCMAKE_C_FLAGS="/WX" -DCMAKE_CXX_FLAGS="/WX"  -DCMAKE_INSTALL_PREFIX="$buildRoot/install" -DPROJ_INCLUDE_DIR="$buildRoot/install/include" -DPROJ_LIBRARY="$buildRoot/install/lib/proj.lib" -DCMAKE_TOOLCHAIN_FILE="$vcpkgPath/scripts/buildsystems/vcpkg.cmake"
           cmake --build . --config Release --target install
+          # Pulling dependencies that are not placed in the install directory
+          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\sqlite3.dll install\bin\
+          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\tiff.dll install\bin\
+          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\jpeg62.dll install\bin\
+          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\zlib1.dll install\bin\
+          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\lzma.dll install\bin\
+
+      - name: Publish artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: libgeotiff-bin
+          path: install/
