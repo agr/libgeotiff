@@ -63,6 +63,7 @@ jobs:
 
       - name: Add runtime dependencies
         run: |
+          $vcpkgPath = [System.IO.Path]::GetDirectoryName((Get-Command vcpkg).Source)
           Copy-Item "${{ github.workspace }}\install-proj\bin\*.dll" "${{ github.workspace }}\install\bin\"
           Copy-Item $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\sqlite3.dll "${{ github.workspace }}\install\bin\"
           Copy-Item $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\tiff.dll "${{ github.workspace }}\install\bin\"
