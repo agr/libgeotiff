@@ -20,16 +20,27 @@ jobs:
     # The type of runner that the job will run on
     runs-on: windows-2019
 
+    env:
+        ARCH: x64
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      - name: Cache vcpkg packages
+        uses: actions/cache@v2
+        id: cache
+        with:
+            path: c:\vcpkg\installed
+            key: ${{ runner.os }}-vcpkg-${{ hashFiles('.github/workflows/main.yml') }}
+
       # Runs a single command using the runners shell
       - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          vcpkg install tiff:x64-windows
-          vcpkg install sqlite3:x64-windows
+          vcpkg install tiff:${{ env.ARCH }}-windows
+          vcpkg install sqlite3:${{ env.ARCH }}-windows
           Invoke-WebRequest -Uri https://sqlite.org/2018/sqlite-tools-win32-x86-3250100.zip -OutFile sqlite-tools-win32-x86-3250100.zip
           7z x sqlite-tools-win32-x86-3250100.zip
           copy sqlite-tools-win32-x86-3250100/sqlite3.exe .
@@ -37,6 +48,7 @@ jobs:
       - name: Build PROJ
         run: |
           Write-Host "Current directory: $pwd"
+          Get-ChildItem
           $buildRoot=$pwd.Path
           git clone --depth=1 -b 6.3 https://github.com/OSGeo/PROJ proj
           cd proj
@@ -45,13 +57,15 @@ jobs:
           copy ..\..\sqlite3.exe .
           $vcpkgPath = [System.IO.Path]::GetDirectoryName((Get-Command vcpkg).Source)
           Write-Host $vcpkgPath
-          copy $vcpkgPath\installed\x64-windows\bin\sqlite3.dll .
+          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\sqlite3.dll .
           Get-ChildItem
           $env:PATH="$($pwd.Path);$($env:PATH)"
           Write-Host "cmake -G"
-          cmake -G "Visual Studio 16 2019" -A x64 .. -DCMAKE_BUILD_TYPE=Release -DPROJ_TESTS=OFF -DBUILD_LIBPROJ_SHARED=ON -DCMAKE_TOOLCHAIN_FILE=$vcpkgPath/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX="$buildRoot/install"
-          Write-Host "cmake --build"
-          cmake --build . --config Release --target install
+          cmake -GNinja .. -DCMAKE_BUILD_TYPE=Release -DPROJ_TESTS=OFF -DBUILD_LIBPROJ_SHARED=ON -DCMAKE_TOOLCHAIN_FILE=$vcpkgPath/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX="$buildRoot/install"
+          Write-Host "ninja -v"
+          ninja -v
+          Write-Host "ninja install"
+          ninja install
           cd ..
           cd ..
           
@@ -61,5 +75,5 @@ jobs:
           cd libgeotiff
           mkdir build
           cd build
-          cmake -G "Visual Studio 16 2019" -A x64 .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release  -DCMAKE_C_FLAGS="/WX" -DCMAKE_CXX_FLAGS="/WX"  -DCMAKE_INSTALL_PREFIX="./install" -DPROJ_INCLUDE_DIR="./install/include" -DPROJ_LIBRARY="./install/lib/proj.lib" -DCMAKE_TOOLCHAIN_FILE=c:/projects/libgeotiff/vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake -G "Visual Studio 16 2019" -A ${{ env.ARCH }} .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release  -DCMAKE_C_FLAGS="/WX" -DCMAKE_CXX_FLAGS="/WX"  -DCMAKE_INSTALL_PREFIX="./install" -DPROJ_INCLUDE_DIR="./install/include" -DPROJ_LIBRARY="./install/lib/proj.lib" -DCMAKE_TOOLCHAIN_FILE=c:/projects/libgeotiff/vcpkg/scripts/buildsystems/vcpkg.cmake
           cmake --build . --config Release --target install
