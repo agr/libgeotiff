@@ -36,6 +36,8 @@ jobs:
           
       - name: Build PROJ
         run: |
+          Write-Host "Current directory: $pwd"
+          $buildRoot=$pwd.Path
           git clone --depth=1 -b 6.3 https://github.com/OSGeo/PROJ proj
           cd proj
           mkdir build
@@ -44,8 +46,11 @@ jobs:
           $vcpkgPath = [System.IO.Path]::GetDirectoryName((Get-Command vcpkg).Source)
           Write-Host $vcpkgPath
           copy $vcpkgPath\installed\x64-windows\bin\sqlite3.dll .
+          Get-ChildItem
           $env:PATH="$($pwd.Path);$($env:PATH)"
-          cmake -G "Visual Studio 16 2019" -A x64 .. -DCMAKE_BUILD_TYPE=Release -DPROJ_TESTS=OFF -DBUILD_LIBPROJ_SHARED=ON -DCMAKE_TOOLCHAIN_FILE=$vcpkgPath/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX="./install"
+          Write-Host "cmake -G"
+          cmake -G "Visual Studio 16 2019" -A x64 .. -DCMAKE_BUILD_TYPE=Release -DPROJ_TESTS=OFF -DBUILD_LIBPROJ_SHARED=ON -DCMAKE_TOOLCHAIN_FILE=$vcpkgPath/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX="$buildRoot/install"
+          Write-Host "cmake --build"
           cmake --build . --config Release --target install
           cd ..
           cd ..
