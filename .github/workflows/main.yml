@@ -61,7 +61,7 @@ jobs:
           Get-ChildItem
           $env:PATH="$($pwd.Path);$($env:PATH)"
           Write-Host "cmake -G"
-          cmake -G "Visual Studio 16 2019" -A ${{ env.ARCH }} .. -DCMAKE_BUILD_TYPE=Release -DPROJ_TESTS=OFF -DBUILD_LIBPROJ_SHARED=ON "-DCMAKE_TOOLCHAIN_FILE=$vcpkgPath/scripts/buildsystems/vcpkg.cmake" -DCMAKE_INSTALL_PREFIX="$buildRoot/install"
+          cmake -G "Visual Studio 16 2019" -A ${{ env.ARCH }} .. -DCMAKE_BUILD_TYPE=Release -DPROJ_TESTS=OFF -DBUILD_LIBPROJ_SHARED=ON -DCMAKE_TOOLCHAIN_FILE="$vcpkgPath/scripts/buildsystems/vcpkg.cmake" -DCMAKE_INSTALL_PREFIX="$buildRoot/install"
           Write-Host "cmake --build"
           cmake --build . --config Release --target install
           cd ..
@@ -70,8 +70,10 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Build
         run: |
+          $buildRoot=$pwd.Path.Replace("\", "/")
+          $vcpkgPath = [System.IO.Path]::GetDirectoryName((Get-Command vcpkg).Source)
           cd libgeotiff
           mkdir build
           cd build
-          cmake -G "Visual Studio 16 2019" -A ${{ env.ARCH }} .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release  -DCMAKE_C_FLAGS="/WX" -DCMAKE_CXX_FLAGS="/WX"  -DCMAKE_INSTALL_PREFIX="./install" -DPROJ_INCLUDE_DIR="./install/include" -DPROJ_LIBRARY="./install/lib/proj.lib" -DCMAKE_TOOLCHAIN_FILE=c:/projects/libgeotiff/vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake -G "Visual Studio 16 2019" -A ${{ env.ARCH }} .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release  -DCMAKE_C_FLAGS="/WX" -DCMAKE_CXX_FLAGS="/WX"  -DCMAKE_INSTALL_PREFIX="$buildRoot/install" -DPROJ_INCLUDE_DIR="$buildRoot/install/include" -DPROJ_LIBRARY="$buildRoot/install/lib/proj.lib" -DCMAKE_TOOLCHAIN_FILE="$vcpkgPath/scripts/buildsystems/vcpkg.cmake"
           cmake --build . --config Release --target install
