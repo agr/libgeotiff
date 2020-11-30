@@ -72,5 +72,5 @@ jobs:
       - name: Publish artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: libgeotiff-bin
+          name: libgeotiff-bin-${{ github.run_number }}
           path: install/
