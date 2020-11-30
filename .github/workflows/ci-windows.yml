@@ -23,7 +23,7 @@ jobs:
         id: cache
         with:
             path: c:\vcpkg\installed
-            key: ${{ runner.os }}-vcpkg-${{ hashFiles('.github/workflows/main.yml') }}
+            key: ${{ runner.os }}-vcpkg-${{ hashFiles('.github/workflows/ci-windows.yml') }}
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
