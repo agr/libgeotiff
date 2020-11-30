@@ -49,7 +49,7 @@ jobs:
         run: |
           Write-Host "Current directory: $pwd"
           Get-ChildItem
-          $buildRoot=$pwd.Path
+          $buildRoot=$pwd.Path.Replace("\", "/")
           git clone --depth=1 -b 6.3 https://github.com/OSGeo/PROJ proj
           cd proj
           mkdir build
@@ -61,11 +61,9 @@ jobs:
           Get-ChildItem
           $env:PATH="$($pwd.Path);$($env:PATH)"
           Write-Host "cmake -G"
-          cmake -GNinja .. -DCMAKE_BUILD_TYPE=Release -DPROJ_TESTS=OFF -DBUILD_LIBPROJ_SHARED=ON -DCMAKE_TOOLCHAIN_FILE=$vcpkgPath/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX="$buildRoot/install"
-          Write-Host "ninja -v"
-          ninja -v
-          Write-Host "ninja install"
-          ninja install
+          cmake -G "Visual Studio 16 2019" -A ${{ env.ARCH }} .. -DCMAKE_BUILD_TYPE=Release -DPROJ_TESTS=OFF -DBUILD_LIBPROJ_SHARED=ON "-DCMAKE_TOOLCHAIN_FILE=$vcpkgPath/scripts/buildsystems/vcpkg.cmake" -DCMAKE_INSTALL_PREFIX="$buildRoot/install"
+          Write-Host "cmake --build"
+          cmake --build . --config Release --target install
           cd ..
           cd ..
           
