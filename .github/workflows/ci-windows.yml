@@ -42,7 +42,7 @@ jobs:
       - name: Build PROJ
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          $buildRoot=$pwd.Path.Replace("\", "/")
+          $buildRoot = "${{ github.workspace }}".Replace("\", "/")
           $vcpkgPath = [System.IO.Path]::GetDirectoryName((Get-Command vcpkg).Source)
           git clone --depth=1 -b 6.3 https://github.com/OSGeo/PROJ proj
           cd proj
@@ -58,7 +58,7 @@ jobs:
           
       - name: Build
         run: |
-          $buildRoot=$pwd.Path.Replace("\", "/")
+          $buildRoot = "${{ github.workspace }}".Replace("\", "/")
           $vcpkgPath = [System.IO.Path]::GetDirectoryName((Get-Command vcpkg).Source)
           cd libgeotiff
           mkdir build
@@ -68,12 +68,12 @@ jobs:
 
       - name: Add runtime dependencies
         run: |
-          copy $buildRoot\install-proj\bin\*.dll $buildRoot\install\bin\
-          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\sqlite3.dll $buildRoot\install\bin\
-          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\tiff.dll $buildRoot\install\bin\
-          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\jpeg62.dll $buildRoot\install\bin\
-          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\zlib1.dll $buildRoot\install\bin\
-          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\lzma.dll $buildRoot\install\bin\
+          copy $buildRoot\install-proj\bin\*.dll "${{ github.workspace }}\install\bin\"
+          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\sqlite3.dll "${{ github.workspace }}\install\bin\"
+          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\tiff.dll "${{ github.workspace }}\install\bin\"
+          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\jpeg62.dll "${{ github.workspace }}\install\bin\"
+          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\zlib1.dll "${{ github.workspace }}\install\bin\"
+          copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\lzma.dll "${{ github.workspace }}\install\bin\"
 
       - name: Publish artifacts
         uses: actions/upload-artifact@v2
