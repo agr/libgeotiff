@@ -22,7 +22,9 @@ jobs:
         uses: actions/cache@v2
         id: cache
         with:
-            path: c:\vcpkg\installed
+            path: |
+              c:\vcpkg\installed
+              ${{ github.workspace }}\install-proj
             key: ${{ runner.os }}-vcpkg-${{ hashFiles('.github/workflows/ci-windows.yml') }}
 
       - name: Install VCPKG dependencies
@@ -38,6 +40,7 @@ jobs:
           copy sqlite-tools-win32-x86-3250100/sqlite3.exe .
           
       - name: Build PROJ
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           $buildRoot=$pwd.Path.Replace("\", "/")
           $vcpkgPath = [System.IO.Path]::GetDirectoryName((Get-Command vcpkg).Source)
@@ -48,7 +51,7 @@ jobs:
           copy ..\..\sqlite3.exe .
           copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\sqlite3.dll .
           $env:PATH="$($pwd.Path);$($env:PATH)"
-          cmake -G "Visual Studio 16 2019" -A ${{ env.ARCH }} .. -DCMAKE_BUILD_TYPE=Release -DPROJ_TESTS=OFF -DBUILD_LIBPROJ_SHARED=ON -DCMAKE_TOOLCHAIN_FILE="$vcpkgPath/scripts/buildsystems/vcpkg.cmake" -DCMAKE_INSTALL_PREFIX="$buildRoot/install"
+          cmake -G "Visual Studio 16 2019" -A ${{ env.ARCH }} .. -DCMAKE_BUILD_TYPE=Release -DPROJ_TESTS=OFF -DBUILD_LIBPROJ_SHARED=ON -DCMAKE_TOOLCHAIN_FILE="$vcpkgPath/scripts/buildsystems/vcpkg.cmake" -DCMAKE_INSTALL_PREFIX="$buildRoot/install-proj"
           cmake --build . --config Release --target install
           cd ..
           cd ..
@@ -60,9 +63,10 @@ jobs:
           cd libgeotiff
           mkdir build
           cd build
-          cmake -G "Visual Studio 16 2019" -A ${{ env.ARCH }} .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release  -DCMAKE_C_FLAGS="/WX" -DCMAKE_CXX_FLAGS="/WX"  -DCMAKE_INSTALL_PREFIX="$buildRoot/install" -DPROJ_INCLUDE_DIR="$buildRoot/install/include" -DPROJ_LIBRARY="$buildRoot/install/lib/proj.lib" -DCMAKE_TOOLCHAIN_FILE="$vcpkgPath/scripts/buildsystems/vcpkg.cmake"
+          cmake -G "Visual Studio 16 2019" -A ${{ env.ARCH }} .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release  -DCMAKE_C_FLAGS="/WX" -DCMAKE_CXX_FLAGS="/WX"  -DCMAKE_INSTALL_PREFIX="$buildRoot/install" -DPROJ_INCLUDE_DIR="$buildRoot/install-proj/include" -DPROJ_LIBRARY="$buildRoot/install-proj/lib/proj.lib" -DCMAKE_TOOLCHAIN_FILE="$vcpkgPath/scripts/buildsystems/vcpkg.cmake"
           cmake --build . --config Release --target install
           # Pulling dependencies that are not placed in the install directory
+          copy $buildRoot\install-proj\bin\*.dll $buildRoot\install\bin\
           copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\sqlite3.dll $buildRoot\install\bin\
           copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\tiff.dll $buildRoot\install\bin\
           copy $vcpkgPath\installed\${{ env.ARCH }}-windows\bin\jpeg62.dll $buildRoot\install\bin\
