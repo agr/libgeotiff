@@ -25,11 +25,14 @@ jobs:
             path: c:\vcpkg\installed
             key: ${{ runner.os }}-vcpkg-${{ hashFiles('.github/workflows/ci-windows.yml') }}
 
-      - name: Install dependencies
+      - name: Install VCPKG dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           vcpkg install tiff:${{ env.ARCH }}-windows
           vcpkg install sqlite3:${{ env.ARCH }}-windows
+
+      - name: Install sqlite3.exe
+        run: |
           Invoke-WebRequest -Uri https://sqlite.org/2018/sqlite-tools-win32-x86-3250100.zip -OutFile sqlite-tools-win32-x86-3250100.zip
           7z x sqlite-tools-win32-x86-3250100.zip
           copy sqlite-tools-win32-x86-3250100/sqlite3.exe .
